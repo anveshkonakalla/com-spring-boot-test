@@ -4,14 +4,29 @@ pipeline{
         maven "myMaven"
     }
     stages {
-        stage('Fetch code'){
+        stage('Build Setup'){
             steps{
-                git branch: 'master', url: 'https://github.com/anveshkonakalla/com-spring-boot-test.git'
+               script {
+                    	BRANCH_NAME=sh(script: "echo $env.GIT_BRANCH | sed -e 's|origin/||g'", returnStdout:true).trim()
+                    	echo "Branch name: ${BRANCH_NAME}" 
+                    	if("${BRANCH_NAME}" == 'master'){
+                    		echo "Branch name: ${BRANCH_NAME}"
+                    		BUILD_VERSION='2023.99.0'
+                    		echo "BUILD_VERSION: ${BUILD_VERSION}"
+                    	} else {
+                    		BUILD_VERSION = sh(script: "echo $env.GIT_BRANCH | sed -e 's|origin/||g'", returnStdout:true).trim()
+                    		echo "BUILD_VERSION: ${BUILD_VERSION}"
+                    	}
+                    	GIT_COMMIT= sh([script: "git rev-parse HEAD", returnStdout:true]).trim()
+                        NEXUS_VERSION=sh([script: "git rev-list ${GIT_COMMIT} --count", returnStdout:true]).trim()
+                        GIT_SIMPLE=sh([script: "git rev-list ${GIT_COMMIT} | head -n 1| cut -c 1-5", returnStdout:true]).trim()
+                        currentBuild.displayName="${BUILD_VERSION}.${NEXUS_VERSION}-${GIT_SIMPLE}"
+               }
             }
         }
         stage('Build'){
             steps{
-                sh 'mvn install -DskipTests'
+                sh "mvn install versions:set -DnewVersion=${BUILD_VERSION}.${NEXUS_VERSION}-${GIT_SIMPLE}-SNAPSHOT -B -DskipTests"
             }
             post{
                 success{
@@ -61,13 +76,13 @@ pipeline{
                     protocol: 'http',
                     nexusUrl: 'localhost:8082',
                     groupId: 'com.example',
-                    version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                    version: "${BUILD_VERSION}.${NEXUS_VERSION}-${GIT_SIMPLE}",
                     repository: 'maven-test-repo',
                     credentialsId: 'nexuslogin',
                     artifacts: [
                         [artifactId: 'com-spring-boot-test',
                         classifier: '',
-                        file: 'target/com-spring-boot-test-0.0.1-SNAPSHOT.jar',
+                        file: "target/com-spring-boot-test-${BUILD_VERSION}.${NEXUS_VERSION}-${GIT_SIMPLE}-SNAPSHOT.jar",
                         type: 'jar']
                     ]
                 )
