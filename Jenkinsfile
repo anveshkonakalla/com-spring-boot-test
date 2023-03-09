@@ -60,7 +60,7 @@ pipeline{
                     nexusVersion: 'nexus3',
                     protocol: 'http',
                     nexusUrl: 'localhost:8082',
-                    groupId: 'QA',
+                    groupId: 'com.example',
                     version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
                     repository: 'maven-test-repo',
                     credentialsId: 'nexuslogin',
