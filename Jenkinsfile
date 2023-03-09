@@ -82,7 +82,7 @@ pipeline{
                     artifacts: [
                         [artifactId: 'com-spring-boot-test',
                         classifier: '',
-                        file: "target/com-spring-boot-test-${BUILD_VERSION}.${NEXUS_VERSION}-${GIT_SIMPLE}-SNAPSHOT.jar",
+                        file: "target/com-spring-boot-test-0.0.1-SNAPSHOT.jar",
                         type: 'jar']
                     ]
                 )
